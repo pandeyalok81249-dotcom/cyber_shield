@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "804162267714",
+    "project_id": "cyber-shield-801d3",
+    "storage_bucket": "cyber-shield-801d3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804162267714:android:02d084a7ad14b9fdf19bdb",
+        "android_client_info": {
+          "package_name": "com.example.cyber_shield"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQZ58rkYYM-l-gU9oMMm79gAnxAByGWiQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
