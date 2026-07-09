@@ -6,6 +6,7 @@ import 'screens/reports_screen.dart';
 import 'screens/tips_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +38,18 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[currentIndex],
+  appBar: AppBar(
+    title: const Text("Cyber Shield"),
+    actions: [
+      IconButton(
+        icon: const Icon(Icons.logout),
+        onPressed: () async {
+          await FirebaseAuth.instance.signOut();
+        },
+      ),
+    ],
+  ),
+  body: pages[currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         backgroundColor: const Color(0xFF101722),

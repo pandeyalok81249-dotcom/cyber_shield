@@ -12,7 +12,20 @@
           "package_name": "com.example.cyber_shield"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "804162267714-rp9a8ljobf2j7hbt3i4fkrsct0jng570.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cyber_shield",
+            "certificate_hash": "1c7112420de71a1db327265e4e6c6843656ddd87"
+          }
+        },
+        {
+          "client_id": "804162267714-bopev80m478ejvo026mg4bpao0occ6on.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCQZ58rkYYM-l-gU9oMMm79gAnxAByGWiQ"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "804162267714-bopev80m478ejvo026mg4bpao0occ6on.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "804162267714-rva7b1ojslc3qsqatlpol8ms8qhfem2l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cyberShield"
+              }
+            }
+          ]
         }
       }
     }
