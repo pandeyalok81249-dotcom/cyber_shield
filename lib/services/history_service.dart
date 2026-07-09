@@ -27,4 +27,25 @@ class HistoryService {
       "createdAt": FieldValue.serverTimestamp(),
     });
   }
+
+  Future<void> saveMessageScan(ScanResult result) async {
+    final user = _auth.currentUser;
+
+    if (user == null) return;
+
+    await _firestore
+        .collection("users")
+        .doc(user.uid)
+        .collection("scan_history")
+        .add({
+      "type": "message",
+      "input": result.input,
+      "riskScore": result.riskScore,
+      "status": result.status,
+      "warnings": result.warnings,
+      "positives": result.positives,
+      "advice": result.advice,
+      "createdAt": FieldValue.serverTimestamp(),
+    });
+  }
 }
