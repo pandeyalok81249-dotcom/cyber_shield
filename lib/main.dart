@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/link_scanner_page.dart';
+import 'screens/scan_history_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,10 +34,10 @@ final pages = const [
   DashboardScreen(),
   ScannerScreen(),
   LinkScannerPage(),
+  ScanHistoryScreen(),
   ReportsScreen(),
   TipsScreen(),
-];
-  
+ ]; 
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +76,11 @@ destinations: const [
     icon: Icon(Icons.link_outlined),
     selectedIcon: Icon(Icons.link),
     label: "Links",
+  ),
+  NavigationDestination(
+   icon: Icon(Icons.history_outlined),
+   selectedIcon: Icon(Icons.history),
+   label: "History",
   ),
   NavigationDestination(
     icon: Icon(Icons.report_outlined),
