@@ -7,6 +7,7 @@ import 'screens/tips_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/link_scanner_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,12 +29,14 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int currentIndex = 0;
 
-  final pages = const [
-    DashboardScreen(),
-    ScannerScreen(),
-    ReportsScreen(),
-    TipsScreen(),
-  ];
+final pages = const [
+  DashboardScreen(),
+  ScannerScreen(),
+  LinkScannerPage(),
+  ReportsScreen(),
+  TipsScreen(),
+];
+  
 
   @override
   Widget build(BuildContext context) {
@@ -57,28 +60,33 @@ class _AppShellState extends State<AppShell> {
         onDestinationSelected: (index) {
           setState(() => currentIndex = index);
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: "Home",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: "Scan",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.report_outlined),
-            selectedIcon: Icon(Icons.report),
-            label: "Reports",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tips_and_updates_outlined),
-            selectedIcon: Icon(Icons.tips_and_updates),
-            label: "Tips",
-          ),
-        ],
+destinations: const [
+  NavigationDestination(
+    icon: Icon(Icons.dashboard_outlined),
+    selectedIcon: Icon(Icons.dashboard),
+    label: "Home",
+  ),
+  NavigationDestination(
+    icon: Icon(Icons.qr_code_scanner_outlined),
+    selectedIcon: Icon(Icons.qr_code_scanner),
+    label: "Scan",
+  ),
+  NavigationDestination(
+    icon: Icon(Icons.link_outlined),
+    selectedIcon: Icon(Icons.link),
+    label: "Links",
+  ),
+  NavigationDestination(
+    icon: Icon(Icons.report_outlined),
+    selectedIcon: Icon(Icons.report),
+    label: "Reports",
+  ),
+  NavigationDestination(
+    icon: Icon(Icons.tips_and_updates_outlined),
+    selectedIcon: Icon(Icons.tips_and_updates),
+    label: "Tips",
+     ),
+      ],
       ),
     );
   }

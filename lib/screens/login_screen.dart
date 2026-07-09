@@ -99,10 +99,6 @@ Future<void> signInWithGoogle() async {
   try {
     final provider = GoogleAuthProvider();
 
-    provider.setCustomParameters({
-      'prompt': 'select_account',
-    });
-
     final credential = await FirebaseAuth.instance.signInWithPopup(provider);
 
     final user = credential.user;
@@ -118,44 +114,46 @@ Future<void> signInWithGoogle() async {
     if (mounted) setState(() => loading = false);
   }
 }
+Future<void> forgotPassword() async {
+  final email = emailController.text.trim();
 
-  Future<void> forgotPassword() async {
-    final email = emailController.text.trim();
-
-    if (email.isEmpty || !email.contains("@")) {
-      showMessage("Enter your email first.");
-      return;
-    }
-
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      showMessage("Password reset email sent.");
-    } on FirebaseAuthException catch (e) {
-      showMessage(firebaseError(e.code));
-    }
+  if (email.isEmpty || !email.contains("@")) {
+    showMessage("Enter your registered email first.");
+    return;
   }
 
+  try {
+    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+    showMessage(
+      "Password reset link sent to $email. Check your inbox/spam folder.",
+    );
+  } on FirebaseAuthException catch (e) {
+    showMessage(firebaseError(e.code));
+  } catch (e) {
+    showMessage("Failed to send reset email. Try again.");
+  }
+}
   String firebaseError(String code) {
-    switch (code) {
-      case "invalid-email":
-        return "Invalid email address.";
-      case "user-not-found":
-        return "No account found with this email.";
-      case "wrong-password":
-        return "Wrong password.";
-      case "email-already-in-use":
-        return "This email is already registered.";
-      case "weak-password":
-        return "Use a stronger password.";
-      case "network-request-failed":
-        return "Network error. Check your internet.";
-      case "popup-closed-by-user":
-        return "Google sign-in was cancelled.";
-      default:
-        return "Something went wrong. Try again.";
-    }
+  switch (code) {
+    case "invalid-email":
+      return "Invalid email address.";
+    case "user-not-found":
+      return "No account found with this email.";
+    case "wrong-password":
+      return "Wrong password.";
+    case "email-already-in-use":
+      return "This email is already registered.";
+    case "weak-password":
+      return "Use a stronger password.";
+    case "network-request-failed":
+      return "Network error. Check your internet.";
+    case "popup-closed-by-user":
+      return "Google sign-in was cancelled.";
+    default:
+      return "Something went wrong. Try again.";
   }
-
+}
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
