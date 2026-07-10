@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/public_scam_service.dart';
 import '../widgets/cyber_card.dart';
 import '../widgets/header_title.dart';
 
@@ -21,6 +22,34 @@ class AdminReportsScreen extends StatelessWidget {
       "status": status,
       "reviewedAt": FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> approveAndAddToDatabase({
+    required String reportId,
+    required String fraudId,
+    required String details,
+  }) async {
+    final publicScamService = PublicScamService();
+
+    await publicScamService.addToPublicDatabase(
+      value: fraudId,
+      type: detectType(fraudId),
+      reason: details,
+      source: "admin_verified_report",
+    );
+
+    await updateStatus(reportId, "resolved");
+  }
+
+  String detectType(String value) {
+    final lower = value.toLowerCase();
+
+    if (lower.contains("@")) return "email";
+    if (lower.startsWith("http") || lower.contains(".")) return "website";
+    if (RegExp(r'^[6-9]\d{9}$').hasMatch(value.trim())) return "phone";
+    if (lower.contains("@") || lower.contains("upi")) return "upi";
+
+    return "unknown";
   }
 
   Color statusColor(String status) {
@@ -54,21 +83,16 @@ class AdminReportsScreen extends StatelessWidget {
           children: [
             const HeaderTitle(),
             const SizedBox(height: 20),
-
             const Text(
               "Fraud Reports Review",
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 8),
-
             const Text(
-              "Review user-submitted fraud reports and update their status.",
+              "Approve verified scams into the public scam database or reject invalid reports.",
               style: TextStyle(color: Colors.white70),
             ),
-
             const SizedBox(height: 18),
-
             StreamBuilder<QuerySnapshot>(
               stream: reportsStream,
               builder: (context, snapshot) {
@@ -140,58 +164,60 @@ class AdminReportsScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-
                               const SizedBox(height: 12),
-
                               Text(
                                 "Reported by: $userEmail",
                                 style: const TextStyle(color: Colors.white70),
                               ),
-
                               const SizedBox(height: 8),
-
                               Text(
                                 details,
                                 style: const TextStyle(height: 1.4),
                               ),
-
                               const SizedBox(height: 14),
-
                               Row(
                                 children: [
                                   Expanded(
-                                    child: OutlinedButton(
+                                    child: OutlinedButton.icon(
                                       onPressed: () async {
-                                        await updateStatus(
-                                          doc.id,
-                                          "pending_review",
+                                        await approveAndAddToDatabase(
+                                          reportId: doc.id,
+                                          fraudId: fraudId,
+                                          details: details,
                                         );
+
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                "Added to public scam database.",
+                                              ),
+                                            ),
+                                          );
+                                        }
                                       },
-                                      child: const Text("Pending"),
+                                      icon: const Icon(Icons.verified),
+                                      label: const Text("Verify"),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
-                                    child: OutlinedButton(
+                                    child: OutlinedButton.icon(
                                       onPressed: () async {
-                                        await updateStatus(
-                                          doc.id,
-                                          "resolved",
-                                        );
+                                        await updateStatus(doc.id, "rejected");
+
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text("Report rejected."),
+                                            ),
+                                          );
+                                        }
                                       },
-                                      child: const Text("Resolved"),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () async {
-                                        await updateStatus(
-                                          doc.id,
-                                          "rejected",
-                                        );
-                                      },
-                                      child: const Text("Reject"),
+                                      icon: const Icon(Icons.close),
+                                      label: const Text("Reject"),
                                     ),
                                   ),
                                 ],
