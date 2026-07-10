@@ -1,5 +1,6 @@
-package com.example.cyber_shield
+package com.alok.cybershield
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+
