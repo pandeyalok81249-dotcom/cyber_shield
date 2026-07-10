@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'app.dart';
+import 'firebase_options.dart';
+
 import 'screens/dashboard_screen.dart';
 import 'screens/scanner_screen.dart';
-import 'screens/reports_screen.dart';
-import 'screens/tips_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/link_scanner_page.dart';
 import 'screens/scan_history_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/tips_screen.dart';
+import 'screens/settings_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,30 +33,41 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int currentIndex = 0;
 
-final pages = const [
-  DashboardScreen(),
-  ScannerScreen(),
-  LinkScannerPage(),
-  ScanHistoryScreen(),
-  ReportsScreen(),
-  TipsScreen(),
- ]; 
+  final pages = const [
+    DashboardScreen(),
+    ScannerScreen(),
+    LinkScannerPage(),
+    ScanHistoryScreen(),
+    ReportsScreen(),
+    TipsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  appBar: AppBar(
-    title: const Text("Cyber Shield"),
-    actions: [
-      IconButton(
-        icon: const Icon(Icons.logout),
-        onPressed: () async {
-          await FirebaseAuth.instance.signOut();
-        },
+      appBar: AppBar(
+        title: const Text("Cyber Shield"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
       ),
-    ],
-  ),
-  body: pages[currentIndex],
+      body: pages[currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         backgroundColor: const Color(0xFF101722),
@@ -61,43 +75,42 @@ final pages = const [
         onDestinationSelected: (index) {
           setState(() => currentIndex = index);
         },
-destinations: const [
-  NavigationDestination(
-    icon: Icon(Icons.dashboard_outlined),
-    selectedIcon: Icon(Icons.dashboard),
-    label: "Home",
-  ),
-  NavigationDestination(
-    icon: Icon(Icons.qr_code_scanner_outlined),
-    selectedIcon: Icon(Icons.qr_code_scanner),
-    label: "Scan",
-  ),
-  NavigationDestination(
-    icon: Icon(Icons.link_outlined),
-    selectedIcon: Icon(Icons.link),
-    label: "Links",
-  ),
-  NavigationDestination(
-   icon: Icon(Icons.history_outlined),
-   selectedIcon: Icon(Icons.history),
-   label: "History",
-  ),
-  NavigationDestination(
-    icon: Icon(Icons.report_outlined),
-    selectedIcon: Icon(Icons.report),
-    label: "Reports",
-  ),
-  NavigationDestination(
-    icon: Icon(Icons.tips_and_updates_outlined),
-    selectedIcon: Icon(Icons.tips_and_updates),
-    label: "Tips",
-     ),
-      ],
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: "Home",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search_outlined),
+            selectedIcon: Icon(Icons.search),
+            label: "Scan",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.link_outlined),
+            selectedIcon: Icon(Icons.link),
+            label: "Links",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history),
+            label: "History",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.report_outlined),
+            selectedIcon: Icon(Icons.report),
+            label: "Reports",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.tips_and_updates_outlined),
+            selectedIcon: Icon(Icons.tips_and_updates),
+            label: "Tips",
+          ),
+        ],
       ),
     );
   }
 }
-
 
 
   void showResult(BuildContext context, String title, String message) {
