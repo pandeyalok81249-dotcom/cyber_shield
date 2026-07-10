@@ -60,6 +60,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> deleteAccount() async {
+    setState(() => loading = true);
+
+    try {
+      await settingsService.deleteAccountAndData();
+
+      if (!mounted) return;
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Account deleted successfully.")),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      final message = e.code == "requires-recent-login"
+          ? "For security, please logout and login again before deleting your account."
+          : "Failed to delete account: ${e.message}";
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete account: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
   Future<void> confirmClearHistory() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -113,6 +147,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirm == true) {
       await clearReports();
+    }
+  }
+
+  Future<void> confirmDeleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Delete account permanently?"),
+          content: const Text(
+            "This will delete your account, scan history, fraud reports, and profile data. This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      await deleteAccount();
     }
   }
 
@@ -188,6 +253,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       )
                     : const Icon(Icons.chevron_right),
                 onTap: loading ? null : confirmClearReports,
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            const Text(
+              "Danger Zone",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.redAccent,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            CyberCard(
+              child: ListTile(
+                leading: const Icon(
+                  Icons.delete_forever,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  "Delete Account",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+                subtitle: const Text(
+                  "Permanently delete your account and all saved data.",
+                ),
+                trailing: loading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: loading ? null : confirmDeleteAccount,
               ),
             ),
 

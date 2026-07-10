@@ -34,6 +34,20 @@ class SettingsService {
     }
   }
 
+  Future<void> deleteAccountAndData() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final uid = user.uid;
+
+    await clearScanHistory();
+    await clearMyFraudReports();
+
+    await _firestore.collection("users").doc(uid).delete();
+
+    await user.delete();
+  }
+
   Future<void> signOut() async {
     await _auth.signOut();
   }
