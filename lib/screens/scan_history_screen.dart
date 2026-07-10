@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/cyber_card.dart';
 import '../widgets/header_title.dart';
+import '../widgets/empty_state.dart';
 
 class ScanHistoryScreen extends StatelessWidget {
   const ScanHistoryScreen({super.key});
@@ -48,16 +49,15 @@ class ScanHistoryScreen extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return const CyberCard(
-                  child: Padding(
-                    padding: EdgeInsets.all(18),
-                    child: Text("No scan history yet. Scan a link first."),
-                  ),
-                );
-              }
+if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+  return const EmptyState(
+    icon: Icons.history,
+    title: "No Scan History",
+    message: "Scan a suspicious link or message and your results will appear here.",
+  );
+}
 
-              final docs = snapshot.data!.docs;
+final docs = snapshot.data!.docs;
 
               return Column(
                 children: docs.map((doc) {

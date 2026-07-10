@@ -6,6 +6,7 @@ import '../services/public_scam_service.dart';
 import '../widgets/admin_stat_card.dart';
 import '../widgets/cyber_card.dart';
 import '../widgets/header_title.dart';
+import '../widgets/empty_state.dart';
 
 class AdminReportsScreen extends StatelessWidget {
   const AdminReportsScreen({super.key});
@@ -104,22 +105,21 @@ class AdminReportsScreen extends StatelessWidget {
 
             const SizedBox(height: 18),
 
-            StreamBuilder<QuerySnapshot>(
-              stream: reportsStream,
-              builder: (context, reportSnapshot) {
-                if (reportSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const CyberCard(
-                    child: Padding(
-                      padding: EdgeInsets.all(18),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  );
-                }
+StreamBuilder<QuerySnapshot>(
+  stream: reportsStream,
+  builder: (context, reportSnapshot) {
+    if (reportSnapshot.connectionState == ConnectionState.waiting) {
+      return const CyberCard(
+        child: Padding(
+          padding: EdgeInsets.all(18),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
 
-                final reports = reportSnapshot.data?.docs ?? [];
+    final reports = reportSnapshot.data?.docs ?? [];
 
-                final totalReports = reports.length;
+    final totalReports = reports.length;
 
                 final pendingReports = reports.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
@@ -209,12 +209,11 @@ class AdminReportsScreen extends StatelessWidget {
                     const SizedBox(height: 18),
 
                     if (reports.isEmpty)
-                      const CyberCard(
-                        child: Padding(
-                          padding: EdgeInsets.all(18),
-                          child: Text("No fraud reports found."),
-                        ),
-                      )
+  const EmptyState(
+    icon: Icons.admin_panel_settings_outlined,
+    title: "No Reports Found",
+    message: "When users submit fraud reports, they will appear here for admin review.",
+  )
                     else
                       ...reports.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;

@@ -6,6 +6,7 @@ import '../services/report_service.dart';
 import '../widgets/cyber_card.dart';
 import '../widgets/cyber_textfield.dart';
 import '../widgets/header_title.dart';
+import '../widgets/empty_state.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -144,29 +145,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
           StreamBuilder<QuerySnapshot>(
             stream: reportsStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CyberCard(
-                  child: Padding(
-                    padding: EdgeInsets.all(18),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                );
-              }
+           builder: (context, snapshot) {
+  if (snapshot.connectionState == ConnectionState.waiting) {
+    return const CyberCard(
+      child: Padding(
+        padding: EdgeInsets.all(18),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
 
-              final docs = snapshot.data?.docs ?? [];
+  final docs = snapshot.data?.docs ?? [];
 
-              if (docs.isEmpty) {
-                return const CyberCard(
-                  child: Padding(
-                    padding: EdgeInsets.all(18),
-                    child: Text("No fraud reports submitted yet."),
-                  ),
-                );
-              }
+  if (docs.isEmpty) {
+    return const EmptyState(
+      icon: Icons.report_outlined,
+      title: "No Reports Yet",
+      message:
+          "Submit suspicious phone numbers, emails, UPI IDs, or websites to track them here.",
+    );
+  }
 
-              return Column(
-                children: docs.map((doc) {
+  return Column(
+    children: docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
 
                   final fraudId = data["fraudId"] ?? "";

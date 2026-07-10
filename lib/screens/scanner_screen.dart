@@ -7,6 +7,7 @@ import '../services/public_scam_service.dart';
 import '../widgets/cyber_textfield.dart';
 import '../widgets/header_title.dart';
 import '../widgets/result_card.dart';
+import '../widgets/scanning_animation.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -111,7 +112,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          if (result != null) ResultCard(result: result!),
+          if (scanning)
+  const ScanningAnimation(
+    text: "Scanning message for OTP, KYC, reward, and scam patterns...",
+  ),
+
+if (result != null) ResultCard(result: result!),
         ],
       ),
     );

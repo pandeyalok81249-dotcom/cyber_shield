@@ -7,6 +7,8 @@ import '../services/public_scam_service.dart';
 import '../widgets/cyber_textfield.dart';
 import '../widgets/header_title.dart';
 import '../widgets/result_card.dart';
+import '../widgets/scanning_animation.dart';
+import '../services/threat_intelligence_service.dart';
 
 class LinkScannerPage extends StatefulWidget {
   const LinkScannerPage({super.key});
@@ -20,52 +22,71 @@ class _LinkScannerPageState extends State<LinkScannerPage> {
   final scanner = LinkScannerService();
   final historyService = HistoryService();
   final publicScamService = PublicScamService();
+  final threatService = ThreatIntelligenceService();
 
   ScanResult? result;
   bool scanning = false;
 
-  Future<void> scanUrl() async {
-    setState(() {
-      scanning = true;
-      result = null;
-    });
+Future<void> scanUrl() async {
+  setState(() {
+    scanning = true;
+    result = null;
+  });
 
-    await Future.delayed(const Duration(milliseconds: 900));
+  await Future.delayed(const Duration(milliseconds: 900));
 
-    ScanResult scanResult = scanner.scan(urlController.text);
+  ScanResult scanResult = scanner.scan(urlController.text);
 
-    final publicMatch =
-        await publicScamService.checkPublicDatabase(urlController.text);
+  final threatResult = await threatService.checkUrl(urlController.text);
 
-    if (publicMatch != null) {
-      final value = publicMatch["value"] ?? "Verified scam";
-      final reason = publicMatch["reason"] ?? "Found in public scam database";
-
-      scanResult = ScanResult(
-        input: scanResult.input,
-        riskScore: 95,
-        status: "High Risk",
-        warnings: [
-          "Matched verified public scam database: $value",
-          "Reason: $reason",
-          ...scanResult.warnings,
-        ],
-        positives: scanResult.positives,
-        advice:
-            "This link is present in the verified public scam database. Do not open it, do not enter OTP/password, and report the sender.",
-      );
-    }
-
-    await historyService.saveLinkScan(scanResult);
-
-    if (!mounted) return;
-
-    setState(() {
-      result = scanResult;
-      scanning = false;
-    });
+  if (threatResult != null && threatResult.isThreat) {
+    scanResult = ScanResult(
+      input: scanResult.input,
+      riskScore: threatResult.riskScore,
+      status: "High Risk",
+      warnings: [
+        "Matched real threat intelligence: ${threatResult.provider}",
+        "Threat type: ${threatResult.threatType}",
+        threatResult.details,
+        ...scanResult.warnings,
+      ],
+      positives: scanResult.positives,
+      advice:
+          "This link matched a real threat intelligence provider. Do not open it or enter any sensitive information.",
+    );
   }
 
+  final publicMatch =
+      await publicScamService.checkPublicDatabase(urlController.text);
+
+  if (publicMatch != null) {
+    final value = publicMatch["value"] ?? "Verified scam";
+    final reason = publicMatch["reason"] ?? "Found in public scam database";
+
+    scanResult = ScanResult(
+      input: scanResult.input,
+      riskScore: 95,
+      status: "High Risk",
+      warnings: [
+        "Matched verified public scam database: $value",
+        "Reason: $reason",
+        ...scanResult.warnings,
+      ],
+      positives: scanResult.positives,
+      advice:
+          "This link is present in the verified public scam database. Do not open it, do not enter OTP/password, and report the sender.",
+    );
+  }
+
+  await historyService.saveLinkScan(scanResult);
+
+  if (!mounted) return;
+
+  setState(() {
+    result = scanResult;
+    scanning = false;
+  });
+}
   @override
   void dispose() {
     urlController.dispose();
@@ -110,7 +131,12 @@ class _LinkScannerPageState extends State<LinkScannerPage> {
             ),
           ),
           const SizedBox(height: 20),
-          if (result != null) ResultCard(result: result!),
+          if (scanning)
+  const ScanningAnimation(
+    text: "Scanning link for phishing and scam database match...",
+  ),
+
+if (result != null) ResultCard(result: result!),
         ],
       ),
     );
