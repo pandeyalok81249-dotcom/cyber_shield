@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/scan_result.dart';
+import '../services/history_service.dart';
 import '../services/link_scanner_service.dart';
+import '../services/public_scam_service.dart';
 import '../widgets/cyber_textfield.dart';
 import '../widgets/header_title.dart';
 import '../widgets/result_card.dart';
-import '../services/history_service.dart';
 
 class LinkScannerPage extends StatefulWidget {
   const LinkScannerPage({super.key});
@@ -18,27 +19,52 @@ class _LinkScannerPageState extends State<LinkScannerPage> {
   final urlController = TextEditingController();
   final scanner = LinkScannerService();
   final historyService = HistoryService();
+  final publicScamService = PublicScamService();
 
   ScanResult? result;
   bool scanning = false;
 
-Future<void> scanUrl() async {
-  setState(() {
-    scanning = true;
-    result = null;
-  });
+  Future<void> scanUrl() async {
+    setState(() {
+      scanning = true;
+      result = null;
+    });
 
-  await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 900));
 
-  final scanResult = scanner.scan(urlController.text);
+    ScanResult scanResult = scanner.scan(urlController.text);
 
-  await historyService.saveLinkScan(scanResult);
+    final publicMatch =
+        await publicScamService.checkPublicDatabase(urlController.text);
 
-  setState(() {
-    result = scanResult;
-    scanning = false;
-  });
-}
+    if (publicMatch != null) {
+      final value = publicMatch["value"] ?? "Verified scam";
+      final reason = publicMatch["reason"] ?? "Found in public scam database";
+
+      scanResult = ScanResult(
+        input: scanResult.input,
+        riskScore: 95,
+        status: "High Risk",
+        warnings: [
+          "Matched verified public scam database: $value",
+          "Reason: $reason",
+          ...scanResult.warnings,
+        ],
+        positives: scanResult.positives,
+        advice:
+            "This link is present in the verified public scam database. Do not open it, do not enter OTP/password, and report the sender.",
+      );
+    }
+
+    await historyService.saveLinkScan(scanResult);
+
+    if (!mounted) return;
+
+    setState(() {
+      result = scanResult;
+      scanning = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -60,7 +86,7 @@ Future<void> scanUrl() async {
           ),
           const SizedBox(height: 10),
           const Text(
-            "Paste any suspicious website link and Cyber Shield will analyze its risk patterns.",
+            "Paste any suspicious website link. Cyber Shield checks phishing patterns and verified public scam database records.",
             style: TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 18),

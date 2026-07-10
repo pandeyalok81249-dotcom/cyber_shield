@@ -10,6 +10,7 @@ class PublicScamService {
         .replaceAll("https://", "")
         .replaceAll("http://", "")
         .replaceAll("www.", "")
+        .replaceAll("/", "")
         .replaceAll(" ", "");
   }
 
@@ -27,6 +28,29 @@ class PublicScamService {
     if (result.docs.isEmpty) return null;
 
     return result.docs.first.data();
+  }
+
+  Future<Map<String, dynamic>?> checkTextForPublicScam(String text) async {
+    final normalizedText = normalize(text);
+
+    if (normalizedText.isEmpty) return null;
+
+    final result = await _firestore
+        .collection("public_scam_database")
+        .limit(100)
+        .get();
+
+    for (final doc in result.docs) {
+      final data = doc.data();
+      final normalizedValue = data["normalizedValue"] ?? "";
+
+      if (normalizedValue.toString().isNotEmpty &&
+          normalizedText.contains(normalizedValue.toString())) {
+        return data;
+      }
+    }
+
+    return null;
   }
 
   Future<void> addToPublicDatabase({

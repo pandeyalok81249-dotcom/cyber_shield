@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/public_scam_service.dart';
+import '../widgets/admin_stat_card.dart';
 import '../widgets/cyber_card.dart';
 import '../widgets/header_title.dart';
 
@@ -45,9 +46,10 @@ class AdminReportsScreen extends StatelessWidget {
     final lower = value.toLowerCase();
 
     if (lower.contains("@")) return "email";
-    if (lower.startsWith("http") || lower.contains(".")) return "website";
+    if (lower.startsWith("http")) return "website";
     if (RegExp(r'^[6-9]\d{9}$').hasMatch(value.trim())) return "phone";
-    if (lower.contains("@") || lower.contains("upi")) return "upi";
+    if (lower.contains("upi")) return "upi";
+    if (lower.contains(".")) return "website";
 
     return "unknown";
   }
@@ -73,6 +75,10 @@ class AdminReportsScreen extends StatelessWidget {
         .orderBy("createdAt", descending: true)
         .snapshots();
 
+    final publicDatabaseStream = FirebaseFirestore.instance
+        .collection("public_scam_database")
+        .snapshots();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin Review Panel"),
@@ -83,20 +89,26 @@ class AdminReportsScreen extends StatelessWidget {
           children: [
             const HeaderTitle(),
             const SizedBox(height: 20),
+
             const Text(
-              "Fraud Reports Review",
+              "Admin Analytics",
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
+
             const Text(
-              "Approve verified scams into the public scam database or reject invalid reports.",
+              "Live overview of fraud reports and verified scam database.",
               style: TextStyle(color: Colors.white70),
             ),
+
             const SizedBox(height: 18),
+
             StreamBuilder<QuerySnapshot>(
               stream: reportsStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+              builder: (context, reportSnapshot) {
+                if (reportSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const CyberCard(
                     child: Padding(
                       padding: EdgeInsets.all(18),
@@ -105,129 +117,228 @@ class AdminReportsScreen extends StatelessWidget {
                   );
                 }
 
-                final docs = snapshot.data?.docs ?? [];
+                final reports = reportSnapshot.data?.docs ?? [];
 
-                if (docs.isEmpty) {
-                  return const CyberCard(
-                    child: Padding(
-                      padding: EdgeInsets.all(18),
-                      child: Text("No fraud reports found."),
-                    ),
-                  );
-                }
+                final totalReports = reports.length;
+
+                final pendingReports = reports.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return data["status"] == "pending_review";
+                }).length;
+
+                final resolvedReports = reports.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return data["status"] == "resolved";
+                }).length;
+
+                final rejectedReports = reports.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return data["status"] == "rejected";
+                }).length;
 
                 return Column(
-                  children: docs.map((doc) {
-                    final data = doc.data() as Map<String, dynamic>;
-
-                    final fraudId = data["fraudId"] ?? "";
-                    final details = data["details"] ?? "";
-                    final status = data["status"] ?? "pending_review";
-                    final userEmail = data["userEmail"] ?? "Unknown user";
-
-                    final color = statusColor(status);
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: CyberCard(
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor:
-                                        color.withValues(alpha: 0.18),
-                                    child: Icon(Icons.report, color: color),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      fraudId,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    status,
-                                    style: TextStyle(
-                                      color: color,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "Reported by: $userEmail",
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                details,
-                                style: const TextStyle(height: 1.4),
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () async {
-                                        await approveAndAddToDatabase(
-                                          reportId: doc.id,
-                                          fraudId: fraudId,
-                                          details: details,
-                                        );
-
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                "Added to public scam database.",
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      icon: const Icon(Icons.verified),
-                                      label: const Text("Verify"),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () async {
-                                        await updateStatus(doc.id, "rejected");
-
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text("Report rejected."),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      icon: const Icon(Icons.close),
-                                      label: const Text("Reject"),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.6,
+                      children: [
+                        AdminStatCard(
+                          title: "Total Reports",
+                          value: "$totalReports",
+                          icon: Icons.report,
+                          color: Colors.cyanAccent,
                         ),
-                      ),
-                    );
-                  }).toList(),
+                        AdminStatCard(
+                          title: "Pending",
+                          value: "$pendingReports",
+                          icon: Icons.pending_actions,
+                          color: Colors.orangeAccent,
+                        ),
+                        AdminStatCard(
+                          title: "Resolved",
+                          value: "$resolvedReports",
+                          icon: Icons.verified,
+                          color: Colors.greenAccent,
+                        ),
+                        AdminStatCard(
+                          title: "Rejected",
+                          value: "$rejectedReports",
+                          icon: Icons.cancel,
+                          color: Colors.redAccent,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    StreamBuilder<QuerySnapshot>(
+                      stream: publicDatabaseStream,
+                      builder: (context, publicSnapshot) {
+                        final publicCount =
+                            publicSnapshot.data?.docs.length ?? 0;
+
+                        return AdminStatCard(
+                          title: "Verified Public Scam Records",
+                          value: "$publicCount",
+                          icon: Icons.public,
+                          color: Colors.lightBlueAccent,
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    const Text(
+                      "Fraud Reports Review",
+                      style:
+                          TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    const Text(
+                      "Approve verified scams into the public scam database or reject invalid reports.",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    if (reports.isEmpty)
+                      const CyberCard(
+                        child: Padding(
+                          padding: EdgeInsets.all(18),
+                          child: Text("No fraud reports found."),
+                        ),
+                      )
+                    else
+                      ...reports.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+
+                        final fraudId = data["fraudId"] ?? "";
+                        final details = data["details"] ?? "";
+                        final status = data["status"] ?? "pending_review";
+                        final userEmail = data["userEmail"] ?? "Unknown user";
+
+                        final color = statusColor(status);
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: CyberCard(
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      CircleAvatar(
+                                        backgroundColor:
+                                            color.withValues(alpha: 0.18),
+                                        child: Icon(Icons.report, color: color),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          fraudId,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        status,
+                                        style: TextStyle(
+                                          color: color,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  Text(
+                                    "Reported by: $userEmail",
+                                    style:
+                                        const TextStyle(color: Colors.white70),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  Text(
+                                    details,
+                                    style: const TextStyle(height: 1.4),
+                                  ),
+
+                                  const SizedBox(height: 14),
+
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: () async {
+                                            await approveAndAddToDatabase(
+                                              reportId: doc.id,
+                                              fraudId: fraudId,
+                                              details: details,
+                                            );
+
+                                            if (!context.mounted) return;
+
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Added to public scam database.",
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.verified),
+                                          label: const Text("Verify"),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: () async {
+                                            await updateStatus(
+                                              doc.id,
+                                              "rejected",
+                                            );
+
+                                            if (!context.mounted) return;
+
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content:
+                                                    Text("Report rejected."),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(Icons.close),
+                                          label: const Text("Reject"),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                  ],
                 );
               },
             ),
