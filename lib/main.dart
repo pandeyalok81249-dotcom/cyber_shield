@@ -12,6 +12,7 @@ import 'screens/scan_history_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/tips_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/admin_reports_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,74 +43,87 @@ class _AppShellState extends State<AppShell> {
     TipsScreen(),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Cyber Shield"),
-        actions: [
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text("Cyber Shield"),
+      actions: [
+        if (FirebaseAuth.instance.currentUser?.email ==
+            "pandeyalok81240@gmail.com")
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.admin_panel_settings_outlined),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
+                  builder: (context) => const AdminReportsScreen(),
                 ),
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-          ),
-        ],
-      ),
-      body: pages[currentIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        backgroundColor: const Color(0xFF101722),
-        indicatorColor: Colors.cyanAccent.withValues(alpha: 0.18),
-        onDestinationSelected: (index) {
-          setState(() => currentIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: "Home",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
-            label: "Scan",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.link_outlined),
-            selectedIcon: Icon(Icons.link),
-            label: "Links",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: "History",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.report_outlined),
-            selectedIcon: Icon(Icons.report),
-            label: "Reports",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tips_and_updates_outlined),
-            selectedIcon: Icon(Icons.tips_and_updates),
-            label: "Tips",
-          ),
-        ],
-      ),
-    );
-  }
+        IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+          },
+        ),
+      ],
+    ),
+    body: pages[currentIndex],
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: currentIndex,
+      backgroundColor: const Color(0xFF101722),
+      indicatorColor: Colors.cyanAccent.withValues(alpha: 0.18),
+      onDestinationSelected: (index) {
+        setState(() => currentIndex = index);
+      },
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.dashboard_outlined),
+          selectedIcon: Icon(Icons.dashboard),
+          label: "Home",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.search_outlined),
+          selectedIcon: Icon(Icons.search),
+          label: "Scan",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.link_outlined),
+          selectedIcon: Icon(Icons.link),
+          label: "Links",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.history_outlined),
+          selectedIcon: Icon(Icons.history),
+          label: "History",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.report_outlined),
+          selectedIcon: Icon(Icons.report),
+          label: "Reports",
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.tips_and_updates_outlined),
+          selectedIcon: Icon(Icons.tips_and_updates),
+          label: "Tips",
+        ),
+      ],
+    ),
+  );
+}
 }
 
 
