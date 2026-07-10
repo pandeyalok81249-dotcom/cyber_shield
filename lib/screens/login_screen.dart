@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -97,9 +99,28 @@ Future<void> signInWithGoogle() async {
   setState(() => loading = true);
 
   try {
-    final provider = GoogleAuthProvider();
+    UserCredential credential;
 
-    final credential = await FirebaseAuth.instance.signInWithPopup(provider);
+    if (kIsWeb) {
+      final provider = GoogleAuthProvider();
+      credential = await FirebaseAuth.instance.signInWithPopup(provider);
+    } else {
+      await GoogleSignIn.instance.initialize(
+        serverClientId:
+            "804162267714-bopev80m478ejvo026mg4bpao0occ6on.apps.googleusercontent.com",
+      );
+
+      final googleUser = await GoogleSignIn.instance.authenticate();
+      final googleAuth = googleUser.authentication;
+
+      final firebaseCredential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+
+      credential = await FirebaseAuth.instance.signInWithCredential(
+        firebaseCredential,
+      );
+    }
 
     final user = credential.user;
     if (user != null) {
@@ -107,6 +128,9 @@ Future<void> signInWithGoogle() async {
     }
   } on FirebaseAuthException catch (e) {
     showMessage(firebaseError(e.code));
+  } on GoogleSignInException catch (e) {
+    debugPrint("Google Sign-In Error: $e");
+    showMessage("Google sign-in failed: ${e.toString()}");
   } catch (e) {
     debugPrint("Google Error: $e");
     showMessage(e.toString());

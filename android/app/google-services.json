@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "804162267714-a18q5rnhv8vqmjmav4k0dhj44ehmmf1k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alok.cybershield",
+            "certificate_hash": "6e67bd429601833d432bd5b9d5bf9c24ff06e792"
+          }
+        },
+        {
           "client_id": "804162267714-acapu13qnpje1dr77jov2ju5rfrlssf2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
